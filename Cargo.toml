@@ -1,0 +1,26 @@
+[package]
+name = "jira-nvim"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+smartstring = "1.0.0"
+mlua = { version = "0.8.0-beta.2", features = [
+	"luajit",
+	"vendored",
+	"module",
+	"send",
+	"async",
+] }
+dirs = "4.0.0"
+reqwest = { version = "0.11.10", features = ["blocking", "json"] }
+serde = { version = "1.0", features = ["derive"] }
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
