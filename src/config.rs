@@ -2,10 +2,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use dirs;
-use mlua::prelude::{FromLua, Lua, LuaError, LuaResult, LuaValue};
+use mlua::prelude::{FromLua, Lua, LuaError, LuaResult, LuaValue, ToLua};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     host: String,
     token: String,
@@ -37,8 +36,11 @@ impl<'lua> FromLua<'lua> for Config {
         };
 
         // Host
-        let host = match table.get::<_, String>("host") {
-            Ok(host) => host,
+        let host: String = match table.get::<_, String>("host") {
+            Ok(host) => match host.strip_suffix('/') {
+                Some(val) => val.into(),
+                None => host,
+            },
             Err(_) => {
                 return Err(LuaError::FromLuaConversionError {
                     from: "table",
@@ -60,7 +62,7 @@ impl<'lua> FromLua<'lua> for Config {
 
         // Read token from file
         let mut file = File::open(&token_path)?;
-        let mut buf = [0_u8; 1024];
+        let mut buf = [0_u8; 512];
         let mut read = file.read(&mut buf)?;
         if read < 2 {
             return Err(LuaError::FromLuaConversionError {
@@ -80,6 +82,14 @@ impl<'lua> FromLua<'lua> for Config {
             host,
             token: std::str::from_utf8(&buf[..read]).unwrap().into(),
         })
+    }
+}
+
+impl<'lua> ToLua<'lua> for Config {
+    fn to_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+        let table = lua.create_table_with_capacity(0, 2)?;
+        table.set("host", self.host())?;
+        Ok(LuaValue::Table(table))
     }
 }
 

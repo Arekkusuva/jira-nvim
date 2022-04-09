@@ -18,6 +18,11 @@ function M.write_lines_at(bufnr, line, lines)
     vim.api.nvim_buf_set_lines(bufnr, line, line + #lines, false, lines)
 end
 
+function M.write_block_at(bufnr, line, lines)
+    table.insert(lines, "")
+    M.write_lines_at(bufnr, line, lines)
+end
+
 function M.write_block(bufnr, lines)
     table.insert(lines, "")
     M.write_lines(bufnr, lines)

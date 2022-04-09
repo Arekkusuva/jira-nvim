@@ -1,5 +1,7 @@
 local M = {}
 
+local config = require("jira-nvim.config")
+
 function M.init()
     if vim.g.jira_nvim_initialized then return end
 
@@ -13,11 +15,12 @@ function M.init()
 end
 
 M._setup_once = false
-function M.setup(config)
+function M.setup(cfg)
     if M._setup_once then return end
     M._setup_once = true
 
-    require("libjira_nvim").setup(config or {})
+    local with_defalts = require("libjira_nvim").setup(cfg or {})
+	config.setup(with_defalts)
 end
 
 return M

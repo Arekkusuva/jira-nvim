@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use mlua::prelude::{LuaUserData, LuaUserDataFields};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug)]
@@ -8,12 +8,16 @@ pub struct RequestQuery<'a> {
     pub jql: &'a str,
     #[serde(rename = "maxResults")]
     pub max_results: usize,
+    pub fields: Option<&'a str>,
 }
 
+// TODO: Fix the schema
 #[derive(Deserialize, Debug)]
 pub struct ErrorResponse {
+    #[serde(default)]
     #[serde(rename = "errorMessages")]
     pub error_messages: Vec<String>,
+    #[serde(default)]
     pub errors: HashMap<String, String>,
 }
 
@@ -51,10 +55,16 @@ pub struct Issue {
 
 #[derive(Deserialize, Debug)]
 pub struct Fields {
-    summary: String,
+    #[serde(rename = "created")]
+    pub created_at: DateTime<Utc>,
+    pub summary: String,
     #[serde(rename = "issuetype")]
-    issue_type: IssueType,
-    priority: IssuePriority,
+    pub issue_type: IssueType,
+    pub priority: IssuePriority,
+    pub labels: Vec<String>,
+    pub status: IssueStatus,
+    pub assignee: Option<IssueAssignee>,
+    pub description: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -73,26 +83,34 @@ pub struct IssuePriority {
     pub name: String,
 }
 
-impl LuaUserData for Issue {
-    fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {
-        fields.add_field_method_get("issue_id", |_, this| Ok(this.id.clone()));
-        fields.add_field_method_get("summary", |_, this| Ok(this.fields.summary.clone()));
-        fields.add_field_method_get("issue_type", |_, this| {
-            Ok(this.fields.issue_type.name.clone())
-        });
-        fields.add_field_method_get("is_subtask", |_, this| {
-            Ok(this.fields.issue_type.is_subtask)
-        });
-        fields.add_field_method_get("priority", |_, this| Ok(this.fields.priority.name.clone()));
-    }
+#[derive(Deserialize, Debug)]
+pub struct IssueStatus {
+    #[serde(rename = "statusCategory")]
+    pub category: IssueCategory,
 }
 
-// TODO: Consider using `ToLua` instead of `LuaUserData`
-// impl<'lua> ToLua<'lua> for Issue {
-//     fn to_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
-//         let table = lua.create_table()?;
-//         table.set("issue_id", self.id.clone())?;
-//         table.set("summary", self.fields.summary.clone())?;
-//         Ok(LuaValue::Table(table))
-//     }
-// }
+#[derive(Deserialize, Debug)]
+pub struct IssueCategory {
+    pub name: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct IssueAssignee {
+    #[serde(rename = "displayName")]
+    pub name: String,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum IssueContentType {
+    None,
+    Doc,
+    Paragraph,
+    Text,
+}
+
+impl Default for IssueContentType {
+    fn default() -> Self {
+        Self::None
+    }
+}

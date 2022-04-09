@@ -9,8 +9,8 @@ function M.query_finder(issues, _)
 			return {
 				value = entry,
 				ordinal = entry.summary,
-				display = function(display_opts)
-					return display_opts.ordinal
+				display = function(opts)
+					return string.format("[%s] %s", opts.value.issue_key, opts.ordinal)
 				end,
 			}
 		end,

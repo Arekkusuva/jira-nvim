@@ -1,15 +1,15 @@
 local M = {}
 
 local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
+
+local picker_actions = require("jira-nvim.pickers.actions")
 
 function M.attach_mappings(_)
-    return function(prompt_bufnr, _)
+    return function(prompt_bufnr, map)
         actions.select_default:replace(function()
             actions.close(prompt_bufnr)
-            local selection = action_state.get_selected_entry()
-            print(vim.inspect(selection))
         end)
+		map("n", "<C-b>", picker_actions.open_in_browser)
         return true
     end
 end

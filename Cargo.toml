@@ -7,6 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+chrono = { verstion = "0.4.9", features = ["serde"] }
 smartstring = "1.0.0"
 mlua = { version = "0.8.0-beta.2", features = [
 	"luajit",

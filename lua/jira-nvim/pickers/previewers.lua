@@ -17,7 +17,7 @@ function M.ticket_previewer(_)
             if vim.api.nvim_buf_is_valid(bufnr) then
                 local buf = PreviewBuffer:new({
                     bufnr = bufnr,
-                    title = entry.value.summary,
+                    issue = entry.value,
                 })
                 buf:render()
             end

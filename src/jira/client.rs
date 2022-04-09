@@ -1,7 +1,7 @@
 use reqwest::header::CONTENT_TYPE;
 use reqwest::StatusCode;
 
-use crate::jira::error::{JiraError, JiraResult};
+use crate::error::{Error, Result};
 use crate::jira::models;
 
 const PAGE_SIZE: usize = 50;
@@ -13,8 +13,8 @@ struct BasicCredentinals {
 }
 
 impl BasicCredentinals {
-    fn new(token: &str) -> JiraResult<Self> {
-        let split_at = token.find(":").ok_or(JiraError::MalformedToken)?;
+    fn new(token: &str) -> Result<Self> {
+        let split_at = token.find(":").ok_or(Error::MalformedToken)?;
 
         Ok(Self {
             token: token.into(),
@@ -41,7 +41,7 @@ pub struct JiraClient {
 
 /// A client for [Jira REST API](https://docs.atlassian.com/jira/REST/latest).
 impl JiraClient {
-    pub fn new(host: &str, token: &str) -> JiraResult<Self> {
+    pub fn new(host: &str, token: &str) -> Result<Self> {
         Ok(Self {
             host: host.into(),
             credentinals: BasicCredentinals::new(token)?,
@@ -50,7 +50,7 @@ impl JiraClient {
 }
 
 impl JiraClient {
-    pub fn query(&self, mut jql: &str) -> JiraResult<Vec<models::Issue>> {
+    pub fn query(&self, mut jql: &str) -> Result<Vec<models::Issue>> {
         if jql.len() > 1 && jql.starts_with(|c| c == '\'' || c == '"') {
             // trim quotes
             jql = &jql[1..jql.len() - 1]
@@ -58,6 +58,7 @@ impl JiraClient {
         let query = models::RequestQuery {
             jql,
             max_results: PAGE_SIZE,
+            fields: Some("created,summary,issuetype,priority,labels,status,assignee,description"),
         };
 
         let res = reqwest::blocking::Client::new()
@@ -69,16 +70,16 @@ impl JiraClient {
 
         match res.status() {
             StatusCode::OK => (),
-            StatusCode::UNAUTHORIZED => return Err(JiraError::Unauthorized),
-            StatusCode::FORBIDDEN => return Err(JiraError::PermissionDenied),
+            StatusCode::UNAUTHORIZED => return Err(Error::Unauthorized),
+            StatusCode::FORBIDDEN => return Err(Error::PermissionDenied),
             status if status.is_client_error() => {
-                return Err(JiraError::BadRequest(
+                return Err(Error::BadRequest(
                     res.json::<models::ErrorResponse>()
                         .map_or(None, |err| Some(err)),
                 ))
             }
             status => {
-                return Err(JiraError::UnexpectedStatus(
+                return Err(Error::UnexpectedStatus(
                     status,
                     res.json::<models::ErrorResponse>()
                         .map_or(None, |err| Some(err)),
