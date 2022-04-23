@@ -8,18 +8,18 @@ local IssueBuffer = {}
 setmetatable(IssueBuffer, { __index = BaseBuffer })
 
 function IssueBuffer:new(opts)
-    local this = BaseBuffer:new(opts)
-    this.issue_id = opts.issue_id
-    this.title = opts.title
-    this.details = opts.details
+	local this = BaseBuffer:new(opts)
+	this.issue_id = opts.issue_id
+	this.title = opts.title
+	this.details = opts.details
 
-    setmetatable(this, { __index = self })
-    return this
+	setmetatable(this, { __index = self })
+	return this
 end
 
 function IssueBuffer:render()
-    self:clear()
-    writer.write_block(self.bufnr, { self.title })
+	self:clear()
+	writer.write_block(self.bufnr, { self.title })
 end
 
 M.IssueBuffer = IssueBuffer

@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use mlua::prelude::LuaError;
 
-use crate::jira::models;
+use crate::jira::transport;
 
 pub type Result<T = ()> = std::result::Result<T, Error>;
 
@@ -13,8 +13,8 @@ pub enum Error {
     MalformedToken,
     Unauthorized,
     PermissionDenied,
-    BadRequest(Option<models::ErrorResponse>),
-    UnexpectedStatus(reqwest::StatusCode, Option<models::ErrorResponse>),
+    BadRequest(Option<transport::ErrorResponse>),
+    UnexpectedStatus(reqwest::StatusCode, Option<transport::ErrorResponse>),
     HttpClient(reqwest::Error),
     Lua(LuaError),
 }
@@ -33,7 +33,7 @@ impl fmt::Display for Error {
                 write!(
                     f,
                     "Bad request: {:?}",
-                    err.as_ref().map(models::ErrorResponse::any)
+                    err.as_ref().map(transport::ErrorResponse::any)
                 )
             }
             UnexpectedStatus(status, ref err) => {
@@ -41,7 +41,7 @@ impl fmt::Display for Error {
                     f,
                     "Unexpected response status {}: {:?}",
                     status.as_str(),
-                    err.as_ref().map(models::ErrorResponse::any),
+                    err.as_ref().map(transport::ErrorResponse::any),
                 )
             }
             HttpClient(ref err) => <reqwest::Error as fmt::Display>::fmt(err, f),

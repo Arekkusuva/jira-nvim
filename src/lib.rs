@@ -11,7 +11,7 @@ mod utils;
 use config::Config;
 use error::{Error, Result};
 use jira::client::JiraClient;
-use jira::models::Issue;
+use jira::transport::{Issue, IssueTransition};
 
 /// Sets config and creates Jira client.
 /// Merges new config with default inside [`Config::from_lua`].
@@ -27,8 +27,22 @@ fn query(lua: &Lua, query: String) -> Result<Vec<Issue>> {
     let client = lua
         .app_data_ref::<JiraClient>()
         .ok_or_else(|| Error::SetupFailed)?;
-    let issues = client.query(&query)?;
-    Ok(issues)
+    Ok(client.query(&query)?)
+}
+
+/// Returns list of allowed transitions for a given issue.
+fn issue_transitions(lua: &Lua, issue_key: String) -> Result<Vec<IssueTransition>> {
+    let client = lua
+        .app_data_ref::<JiraClient>()
+        .ok_or_else(|| Error::SetupFailed)?;
+    Ok(client.issue_transitions(&issue_key)?)
+}
+
+fn perform_issue_transition(lua: &Lua, (issue_key, transition_id): (String, String)) -> Result<()> {
+    let client = lua
+        .app_data_ref::<JiraClient>()
+        .ok_or_else(|| Error::SetupFailed)?;
+    Ok(client.perform_issue_transition(&issue_key, &transition_id)?)
 }
 
 /// Wraps text, does not break words.
@@ -59,5 +73,7 @@ fn libjira_nvim(lua: &Lua) -> LuaResult<LuaTable> {
     export_fn!(lua, exports, setup)?;
     export_fn!(lua, exports, query)?;
     export_fn!(lua, exports, wrap_text)?;
+    export_fn!(lua, exports, issue_transitions)?;
+    export_fn!(lua, exports, perform_issue_transition)?;
     Ok(exports)
 }

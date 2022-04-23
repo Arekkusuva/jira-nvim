@@ -9,15 +9,15 @@ local PreviewBuffer = {}
 setmetatable(PreviewBuffer, { __index = BaseBuffer })
 
 function PreviewBuffer:new(opts)
-    local this = BaseBuffer:new(opts)
-    this.issue = opts.issue
+	local this = BaseBuffer:new(opts)
+	this.issue = opts.issue
 
-    setmetatable(this, { __index = self })
-    return this
+	setmetatable(this, { __index = self })
+	return this
 end
 
 function PreviewBuffer:render()
-    self:clear()
+	self:clear()
 
 	local max_width = vim.fn.winwidth(0)
 	local wrapped = require("libjira_nvim").wrap_text(string.format(" %s", self.issue.summary), max_width)
