@@ -7,15 +7,15 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = { verstion = "0.4.9", features = ["serde"] }
-smartstring = "1.0.0"
-mlua = { version = "0.8.0-beta.2", features = [
-  "luajit",
-  "vendored",
-  "module",
-  "send",
-  "async",
-] }
+chrono = { version = "0.4.9", features = ["serde"] }
+mlua = { version = "0.8.0-beta.2", features = ["luajit", "vendored", "module"] }
 dirs = "4.0.0"
 reqwest = { version = "0.11.10", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+httpmock = "0.6"
+
+[profile.release]
+opt-level = "s"
+overflow-checks = false

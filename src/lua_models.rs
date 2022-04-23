@@ -1,7 +1,7 @@
 use mlua::prelude::{LuaUserData, LuaUserDataFields};
 
 use crate::formatters;
-use crate::jira::models::Issue;
+use crate::jira::transport::{Issue, IssueTransition};
 
 impl LuaUserData for Issue {
     fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {
@@ -63,5 +63,12 @@ impl LuaUserData for LuaDescriptionToken {
                 LuaDescriptionToken::Text(text) => text.clone(),
             })
         });
+    }
+}
+
+impl LuaUserData for IssueTransition {
+    fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {
+        fields.add_field_method_get("transition_id", |_, this| Ok(this.id.clone()));
+        fields.add_field_method_get("name", |_, this| Ok(this.to.name.clone()));
     }
 }

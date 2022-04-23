@@ -3,6 +3,41 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+//----------------------------------------
+// Transitions
+//----------------------------------------
+
+#[derive(Serialize, Debug)]
+pub struct NewTransition<'a> {
+    #[serde(rename = "transition")]
+    pub target: TargetTransition<'a>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct TargetTransition<'a> {
+    pub id: &'a str,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct IssueTransitions {
+    pub transitions: Vec<IssueTransition>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct IssueTransition {
+    pub id: String,
+    pub to: IssueTransitionTo,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct IssueTransitionTo {
+    pub name: String,
+}
+
+//----------------------------------------
+// Query
+//----------------------------------------
+
 #[derive(Serialize, Debug)]
 pub struct RequestQuery<'a> {
     pub jql: &'a str,
