@@ -5,7 +5,6 @@ mod error;
 mod formatters;
 mod jira;
 mod lua_models;
-mod nvim;
 mod utils;
 
 use config::Config;

@@ -29,20 +29,20 @@ impl fmt::Display for Error {
             MalformedToken => write!(f, "Malformed token"),
             Unauthorized => write!(f, "Unauthorized"),
             PermissionDenied => write!(f, "Permission denied"),
-            BadRequest(ref err) => {
-                write!(
-                    f,
-                    "Bad request: {:?}",
-                    err.as_ref().map(transport::ErrorResponse::any)
-                )
-            }
+            BadRequest(ref err) => match err.as_ref().map(transport::ErrorResponse::any) {
+                Some(any) => write!(f, "Bad request with erorr: ({})", any),
+                None => write!(f, "Bad request"),
+            },
             UnexpectedStatus(status, ref err) => {
-                write!(
-                    f,
-                    "Unexpected response status {}: {:?}",
-                    status.as_str(),
-                    err.as_ref().map(transport::ErrorResponse::any),
-                )
+                match err.as_ref().map(transport::ErrorResponse::any) {
+                    Some(any) => write!(
+                        f,
+                        "Unexpected response status {} with error: ({})",
+                        status.as_str(),
+                        any,
+                    ),
+                    None => write!(f, "Unexpected response status {}", status.as_str(),),
+                }
             }
             HttpClient(ref err) => <reqwest::Error as fmt::Display>::fmt(err, f),
             Lua(ref err) => <LuaError as fmt::Display>::fmt(err, f),

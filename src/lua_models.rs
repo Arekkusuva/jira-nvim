@@ -33,38 +33,38 @@ impl LuaUserData for Issue {
                 None => "None".into(),
             })
         });
-        fields.add_field_method_get("description", |_, this| {
-            Ok(this
-                .fields
-                .description
-                .as_ref()
-                .map(parse_description_tokens))
-        });
+        // fields.add_field_method_get("description", |_, this| {
+        //     Ok(this
+        //         .fields
+        //         .description
+        //         .as_ref()
+        //         .map(parse_description_tokens))
+        // });
     }
 }
 
-pub enum LuaDescriptionToken {
-    Text(String),
-}
+// pub enum LuaDescriptionToken {
+//     Text(String),
+// }
 
-fn parse_description_tokens(description: &String) -> Vec<LuaDescriptionToken> {
-    let mut tokens = Vec::new();
-    for line in description.lines() {
-        tokens.push(LuaDescriptionToken::Text(line.into()));
-    }
-    tokens
-}
+// fn parse_description_tokens(description: &String) -> Vec<LuaDescriptionToken> {
+//     let mut tokens = Vec::new();
+//     for line in description.lines() {
+//         tokens.push(LuaDescriptionToken::Text(line.into()));
+//     }
+//     tokens
+// }
 
-impl LuaUserData for LuaDescriptionToken {
-    fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {
-        fields.add_field_method_get("is_text", |_, _| Ok(true));
-        fields.add_field_method_get("text", |_, this| {
-            Ok(match this {
-                LuaDescriptionToken::Text(text) => text.clone(),
-            })
-        });
-    }
-}
+// impl LuaUserData for LuaDescriptionToken {
+//     fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {
+//         fields.add_field_method_get("is_text", |_, _| Ok(true));
+//         fields.add_field_method_get("text", |_, this| {
+//             Ok(match this {
+//                 LuaDescriptionToken::Text(text) => text.clone(),
+//             })
+//         });
+//     }
+// }
 
 impl LuaUserData for IssueTransition {
     fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {

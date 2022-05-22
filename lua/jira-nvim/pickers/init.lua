@@ -33,6 +33,7 @@ function M.issue_transitions(issue, opts)
 
 	print("Fetching transitions ...")
 	vim.schedule(function()
+		print(issue.issue_key)
 		local transitions = require("libjira_nvim").issue_transitions(issue.issue_key)
 		print(" ")
 

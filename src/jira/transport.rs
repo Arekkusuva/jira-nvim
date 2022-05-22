@@ -1,7 +1,27 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+//----------------------------------------
+// Error
+//----------------------------------------
+
+#[derive(Deserialize, Debug)]
+pub struct ErrorResponse {
+    #[serde(rename = "errorMessages")]
+    pub error_messages: Option<Vec<String>>,
+    #[serde(default)]
+    pub status: usize,
+}
+
+impl ErrorResponse {
+    pub fn any(&self) -> String {
+        if let Some(msgs) = &self.error_messages {
+            format!("error_code: {}, erorr: {}", self.status, msgs[0].clone())
+        } else {
+            format!("error_code: {}", self.status)
+        }
+    }
+}
 
 //----------------------------------------
 // Transitions
@@ -46,28 +66,6 @@ pub struct RequestQuery<'a> {
     pub fields: Option<&'a str>,
 }
 
-// TODO: Fix the schema
-#[derive(Deserialize, Debug)]
-pub struct ErrorResponse {
-    #[serde(default)]
-    #[serde(rename = "errorMessages")]
-    pub error_messages: Vec<String>,
-    #[serde(default)]
-    pub errors: HashMap<String, String>,
-}
-
-impl ErrorResponse {
-    pub fn any(&self) -> Option<&str> {
-        if !self.error_messages.is_empty() {
-            Some(self.error_messages[0].as_str())
-        } else if self.errors.is_empty() {
-            self.errors.iter().next().map(|(val, _)| val.as_str())
-        } else {
-            None
-        }
-    }
-}
-
 #[derive(Deserialize, Debug)]
 pub struct SearchResult {
     pub total: u64,
@@ -99,7 +97,6 @@ pub struct Fields {
     pub labels: Vec<String>,
     pub status: IssueStatus,
     pub assignee: Option<IssueAssignee>,
-    pub description: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]

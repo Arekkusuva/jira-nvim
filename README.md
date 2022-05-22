@@ -2,6 +2,9 @@
 
 Jira client as an extension for [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
 
+| ⚠️ | Work in progress |
+| ----------- | ----------- |
+
 * 🌠 [Features](#-features)
 * ✔️ [Requirements](#-requirements)
 * 📦 [Installation](#-installation)
@@ -77,8 +80,8 @@ require("which-key").register({
 
 ## 📋 To-dos
 
-- [ ] Fix error model in jira client
-- [ ] Use specific version of Jira API
+- [x] Use specific version of Jira API
+- [x] Fix error model in jira client
 - [ ] Add issue detailed view with description and comments
 - [ ] Ability to edit issue description
 - [ ] Ability to add and edit comments

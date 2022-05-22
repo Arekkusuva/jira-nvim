@@ -6,6 +6,11 @@ use crate::error::{Error, Result};
 use crate::jira::transport;
 
 const PAGE_SIZE: usize = 50;
+const API_VERSION: &'static str = "3";
+
+//----------------------------------------
+// Response extension
+//----------------------------------------
 
 trait ResponseExt: Sized {
     fn if_status(self, expected: StatusCode) -> Result<Self>;
@@ -23,7 +28,7 @@ impl ResponseExt for Response {
             status if status == expected => Ok(self),
             StatusCode::UNAUTHORIZED => Err(Error::Unauthorized),
             StatusCode::FORBIDDEN => Err(Error::PermissionDenied),
-            status if status.is_client_error() => Err(Error::BadRequest(
+            StatusCode::BAD_REQUEST => Err(Error::BadRequest(
                 self.json::<transport::ErrorResponse>()
                     .map_or(None, |err| Some(err)),
             )),
@@ -35,6 +40,10 @@ impl ResponseExt for Response {
         }
     }
 }
+
+//----------------------------------------
+// Credentinals
+//----------------------------------------
 
 #[derive(Clone)]
 struct BasicCredentinals {
@@ -63,6 +72,10 @@ impl BasicCredentinals {
     }
 }
 
+//----------------------------------------
+// Client
+//----------------------------------------
+
 /// A client for [Jira REST API](https://docs.atlassian.com/jira/REST/latest).
 #[derive(Clone)]
 pub struct JiraClient {
@@ -88,7 +101,7 @@ impl JiraClient {
         }
 
         Ok(reqwest::blocking::Client::new()
-            .get(&format!("{}/rest/api/latest/search", &self.host))
+            .get(&format!("{}/rest/api/{}/search", &self.host, API_VERSION))
             .basic_auth(self.credentinals.user(), Some(self.credentinals.password()))
             .query(&transport::RequestQuery {
                 jql,
@@ -106,8 +119,8 @@ impl JiraClient {
     pub fn issue_transitions(&self, issue_key: &str) -> Result<Vec<transport::IssueTransition>> {
         Ok(reqwest::blocking::Client::new()
             .get(&format!(
-                "{}/rest/api/latest/issue/{}/transitions",
-                &self.host, issue_key,
+                "{}/rest/api/{}/issue/{}/transitions",
+                &self.host, API_VERSION, issue_key,
             ))
             .basic_auth(self.credentinals.user(), Some(self.credentinals.password()))
             .send()?
@@ -119,8 +132,8 @@ impl JiraClient {
     pub fn perform_issue_transition(&self, issue_key: &str, transition_id: &str) -> Result<()> {
         reqwest::blocking::Client::new()
             .post(&format!(
-                "{}/rest/api/latest/issue/{}/transitions",
-                &self.host, issue_key,
+                "{}/rest/api/{}/issue/{}/transitions",
+                &self.host, API_VERSION, issue_key,
             ))
             .basic_auth(self.credentinals.user(), Some(self.credentinals.password()))
             .header(CONTENT_TYPE, "application/json")
@@ -142,7 +155,10 @@ mod tests {
         let server = MockServer::start();
         let mock = server.mock(|when, then| {
             when.method(POST)
-                .path("/rest/api/latest/issue/test_key/transitions")
+                .path(format!(
+                    "/rest/api/{}/issue/test_key/transitions",
+                    API_VERSION
+                ))
                 .header("authorization", "Basic dGVzdDp0b2tlbg==")
                 .header("Content-Type", "application/json")
                 .body(r#"{"transition":{"id":"test_transition_id"}}"#);
