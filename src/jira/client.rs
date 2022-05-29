@@ -92,8 +92,8 @@ impl JiraClient {
     }
 }
 
-// TODO: Use specific version
 impl JiraClient {
+    // TODO: Support multiple pages
     pub fn query(&self, mut jql: &str) -> Result<Vec<transport::Issue>> {
         if jql.len() > 1 && jql.starts_with(|c| c == '\'' || c == '"') {
             // trim quotes
@@ -103,17 +103,32 @@ impl JiraClient {
         Ok(reqwest::blocking::Client::new()
             .get(&format!("{}/rest/api/{}/search", &self.host, API_VERSION))
             .basic_auth(self.credentinals.user(), Some(self.credentinals.password()))
-            .query(&transport::RequestQuery {
-                jql,
-                max_results: PAGE_SIZE,
-                fields: Some(
-                    "created,summary,issuetype,priority,labels,status,assignee,description",
-                ),
-            })
+            .query(
+                transport::RequestQuery::default()
+                    .jql(jql)
+                    .fields("created,summary,issuetype,priority,labels,status,assignee")
+                    .max_results(PAGE_SIZE),
+            )
             .send()?
             .if_status(StatusCode::OK)?
             .json::<transport::SearchResult>()?
             .issues)
+    }
+
+    pub fn issue_by_key(&self, issue_key: &str) -> Result<transport::Issue> {
+        Ok(reqwest::blocking::Client::new()
+            .get(&format!(
+                "{}/rest/api/{}/issue/{}",
+                &self.host, API_VERSION, issue_key,
+            ))
+            .basic_auth(self.credentinals.user(), Some(self.credentinals.password()))
+            .query(
+                transport::RequestQuery::default() // TODO: Use bitset?
+                    .fields("created,summary,issuetype,priority,labels,status,assignee,description"),
+            )
+            .send()?
+            .if_status(StatusCode::OK)?
+            .json::<transport::Issue>()?)
     }
 
     pub fn issue_transitions(&self, issue_key: &str) -> Result<Vec<transport::IssueTransition>> {

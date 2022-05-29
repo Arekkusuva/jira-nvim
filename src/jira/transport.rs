@@ -58,12 +58,32 @@ pub struct IssueTransitionTo {
 // Query
 //----------------------------------------
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Default)]
 pub struct RequestQuery<'a> {
-    pub jql: &'a str,
+    pub jql: Option<&'a str>,
     #[serde(rename = "maxResults")]
-    pub max_results: usize,
+    pub max_results: Option<usize>,
     pub fields: Option<&'a str>,
+}
+
+impl<'a> RequestQuery<'a> {
+    #[inline]
+    pub fn jql(&mut self, jql: &'a str) -> &mut Self {
+        self.jql = Some(jql);
+        self
+    }
+
+    #[inline]
+    pub fn max_results(&mut self, max_results: usize) -> &mut Self {
+        self.max_results = Some(max_results);
+        self
+    }
+
+    #[inline]
+    pub fn fields(&mut self, fields: &'a str) -> &mut Self {
+        self.fields = Some(fields);
+        self
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -97,6 +117,7 @@ pub struct Fields {
     pub labels: Vec<String>,
     pub status: IssueStatus,
     pub assignee: Option<IssueAssignee>,
+    pub description: Option<IssueDescriptionNode>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -132,17 +153,295 @@ pub struct IssueAssignee {
     pub name: String,
 }
 
-#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum IssueContentType {
-    None,
-    Doc,
-    Paragraph,
-    Text,
+//----------------------------------------
+// Issue description
+//----------------------------------------
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum IssueDescriptionNode {
+    // Root note
+    Doc {
+        version: usize,
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Paragraph {
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Text {
+        text: String,
+        #[serde(default)]
+        marks: Vec<MarkNode>,
+    },
+    CodeBlock {
+        attrs: Option<CodeBlockAttrs>,
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Blockquote {
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    BulletList {
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Emoji {
+        attrs: EmojiAttrs,
+    },
+    HardBreak,
+    Heading {
+        attrs: HeadingAtrs,
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    InlineCard {
+        attrs: InlineCardAttrs,
+    },
+    ListItem {
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    MediaGroup {
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    MediaSingle {
+        attrs: MediaSingleAttrs,
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Media {
+        attrs: MediaAttrs,
+    },
+    Mention {
+        attrs: MentionAttrs,
+    },
+    OrderedList {
+        attrs: Option<OrderedListAttrs>,
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Panel {
+        attrs: PanelAttrs,
+        #[serde(default)]
+        content: Vec<IssueDescriptionNode>,
+    },
+    Rule,
+    Table {
+        attrs: Option<TableAttrs>,
+        content: Vec<IssueDescriptionNode>,
+    },
+    TableCell {
+        attrs: Option<TableCellAttrs>,
+        content: Vec<IssueDescriptionNode>,
+    },
+    TableHeader {
+        attrs: Option<TableCellAttrs>, // the same as table cell
+        content: Vec<IssueDescriptionNode>,
+    },
+    TableRow {
+        content: Vec<IssueDescriptionNode>,
+    },
+    // TODO: Support
+    BlockCard,
 }
 
-impl Default for IssueContentType {
+#[derive(Deserialize, Debug)]
+pub struct CodeBlockAttrs {
+    pub language: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum MarkNode {
+    Code,
+    Em,
+    Link { attrs: LinkAttrs },
+    Strike,
+    Strong,
+    Subsup { attrs: SubsupAttrs },
+    TextColor { attrs: ColorAttrs },
+    Underline,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct LinkAttrs {
+    pub href: String,
+    pub title: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum SubsupAttrs {
+    Sub,
+    Sup,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ColorAttrs {
+    pub color: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct EmojiAttrs {
+    #[serde(rename = "shortName")]
+    pub short_name: String,
+    pub text: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct HeadingAtrs {
+    pub level: usize,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct InlineCardAttrs {
+    pub url: String,
+    // TODO: pub data
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MediaSingleAttrs {
+    pub layout: String,
+    #[serde(default)]
+    pub width: usize,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MediaAttrs {
+    #[serde(rename = "type")]
+    pub typ: MediaType,
+    pub id: String,
+    pub collection: String,
+    #[serde(rename = "occurrenceKey")]
+    pub occurrence_key: Option<String>,
+    #[serde(default)]
+    pub width: usize,
+    #[serde(default)]
+    pub height: usize,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum MediaType {
+    File,
+    Link,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MentionAttrs {
+    pub id: String,
+    pub text: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct OrderedListAttrs {
+    pub order: usize,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PanelAttrs {
+    #[serde(rename = "panelType")]
+    pub typ: PanelType,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TableAttrs {
+    #[serde(rename = "isNumberColumnEnabled", default)]
+    pub number_column_enabled: bool,
+    #[serde(default)]
+    pub layout: TableLayout,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum TableLayout {
+    Default,
+    #[serde(rename = "full-width")]
+    FullWidth,
+    Wide,
+}
+
+impl Default for TableLayout {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TableCellAttrs {
+    pub background: Option<String>,
+    #[serde(default)]
+    pub colspan: usize,
+    #[serde(default)]
+    pub colwidth: usize,
+    #[serde(default)]
+    pub rowspan: usize,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum PanelType {
+    Info,
+    Note,
+    Warning,
+    Success,
+    Error,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum NodeAttrs {
+    Emoji {
+        #[serde(rename = "shortName")]
+        short_name: String,
+        text: String,
+    },
+    Heading {
+        level: usize,
+    },
+    InlineCard {
+        url: String,
+    },
+    Mention {
+        id: String,
+        text: String,
+    },
+}
+
+#[derive(Deserialize, Debug)]
+pub struct IssuDescriptionMark {
+    #[serde(default)]
+    pub typ: MarkType,
+    pub attrs: Option<MarkAttrs>,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum MarkType {
+    None,
+    Code,
+    Em,
+    Link,
+    Strike,
+    Strong,
+    Subsup,
+    TextColor,
+    Underline,
+}
+
+impl Default for MarkType {
     fn default() -> Self {
         Self::None
     }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MarkAttrs {
+    pub href: Option<String>,
+    pub title: Option<String>,
+    pub color: Option<String>,
 }

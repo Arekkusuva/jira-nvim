@@ -29,6 +29,14 @@ fn query(lua: &Lua, query: String) -> Result<Vec<Issue>> {
     Ok(client.query(&query)?)
 }
 
+/// Returns the datailes for an issue with a given key.
+fn issue_by_key(lua: &Lua, issue_key: String) -> Result<Issue> {
+    let client = lua
+        .app_data_ref::<JiraClient>()
+        .ok_or_else(|| Error::SetupFailed)?;
+    Ok(client.issue_by_key(&issue_key)?)
+}
+
 /// Returns list of allowed transitions for a given issue.
 fn issue_transitions(lua: &Lua, issue_key: String) -> Result<Vec<IssueTransition>> {
     let client = lua
@@ -37,6 +45,7 @@ fn issue_transitions(lua: &Lua, issue_key: String) -> Result<Vec<IssueTransition
     Ok(client.issue_transitions(&issue_key)?)
 }
 
+/// Performs issue transiton to a given state.
 fn perform_issue_transition(lua: &Lua, (issue_key, transition_id): (String, String)) -> Result<()> {
     let client = lua
         .app_data_ref::<JiraClient>()
@@ -66,11 +75,13 @@ macro_rules! export_fn {
     };
 }
 
+// Lib exports
 #[mlua::lua_module]
 fn libjira_nvim(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     export_fn!(lua, exports, setup)?;
     export_fn!(lua, exports, query)?;
+    export_fn!(lua, exports, issue_by_key)?;
     export_fn!(lua, exports, wrap_text)?;
     export_fn!(lua, exports, issue_transitions)?;
     export_fn!(lua, exports, perform_issue_transition)?;
