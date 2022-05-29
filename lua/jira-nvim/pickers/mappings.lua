@@ -8,7 +8,7 @@ function M.issues_mappings(opts)
 	opts = opts or {}
 	return function(prompt_bufnr, map)
 		actions.select_default:replace(function()
-			actions.close(prompt_bufnr)
+			picker_actions.open_issue(prompt_bufnr)
 		end)
 		map("n", "<C-y>", picker_actions.copy_issue_url)
 		map("n", "<C-b>", picker_actions.open_in_browser)

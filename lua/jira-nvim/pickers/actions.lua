@@ -4,6 +4,7 @@ local action_state = require "telescope.actions.state"
 local actions = require "telescope.actions"
 
 local config = require("jira-nvim.config")
+local buffers = require("jira-nvim.buffers")
 
 function M.issue_url(_)
 	local issue = action_state.get_selected_entry().value;
@@ -59,6 +60,13 @@ function M.do_transition(_, _)
 		require("libjira_nvim").perform_issue_transition(issue_key, transition_id)
 		print(" ")
 	end)
+end
+
+function M.open_issue(prompt_bufnr)
+	actions.close(prompt_bufnr)
+
+	local selected = action_state.get_selected_entry(prompt_bufnr).value;
+	buffers.create_issue_buffer(selected)
 end
 
 return M
