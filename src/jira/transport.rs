@@ -285,32 +285,32 @@ pub struct ColorAttrs {
     pub color: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EmojiAttrs {
     #[serde(rename = "shortName")]
     pub short_name: String,
     pub text: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct HeadingAtrs {
     pub level: usize,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct InlineCardAttrs {
     pub url: String,
     // TODO: pub data
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MediaSingleAttrs {
     pub layout: String,
     #[serde(default)]
     pub width: usize,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MediaAttrs {
     #[serde(rename = "type")]
     pub typ: MediaType,
@@ -324,31 +324,31 @@ pub struct MediaAttrs {
     pub height: usize,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum MediaType {
     File,
     Link,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MentionAttrs {
     pub id: String,
     pub text: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct OrderedListAttrs {
     pub order: usize,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PanelAttrs {
     #[serde(rename = "panelType")]
     pub typ: PanelType,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct TableAttrs {
     #[serde(rename = "isNumberColumnEnabled", default)]
     pub number_column_enabled: bool,
@@ -356,7 +356,7 @@ pub struct TableAttrs {
     pub layout: TableLayout,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum TableLayout {
     Default,
@@ -371,7 +371,7 @@ impl Default for TableLayout {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct TableCellAttrs {
     pub background: Option<String>,
     #[serde(default)]
@@ -382,7 +382,7 @@ pub struct TableCellAttrs {
     pub rowspan: usize,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum PanelType {
     Info,
