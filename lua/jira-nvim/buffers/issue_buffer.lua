@@ -24,6 +24,12 @@ function IssueBuffer:render()
 		string.rep("-", max_width),
 	})
 	self:render_details()
+	writer.write_block(self.bufnr, {
+		"",
+		" Description",
+		string.rep("-", max_width),
+	})
+	self:render_description()
 
 	self:end_frame()
 end
@@ -42,6 +48,30 @@ function IssueBuffer:render_details()
 		string.format("  Assignee: %s", self.issue.assignee_name),
 		string.format("  Priority: %s", self.issue.priority),
 	})
+end
+
+--local token_doc_begin = 1
+--local token_doc_end = 2
+--local token_paragraph_begin = 3
+local token_paragraph_end = 4
+local token_text = 5
+
+function IssueBuffer:render_description_token(token)
+	local typ = token.type_id
+	if (typ == token_paragraph_end) then
+		writer.write_block(self.bufnr, {})
+	elseif (typ == token_text) then
+		writer.write_lines(self.bufnr, { token:text() })
+	end
+end
+
+function IssueBuffer:render_description()
+	local tokens = self.issue:take_description()
+	if tokens then
+		for i = 1, #tokens do
+			print(i, ". ", self:render_description_token(tokens[i]))
+		end
+	end
 end
 
 M.IssueBuffer = IssueBuffer
