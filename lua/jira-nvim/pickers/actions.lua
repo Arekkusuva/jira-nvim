@@ -5,16 +5,16 @@ local actions = require "telescope.actions"
 
 local config = require("jira-nvim.config")
 
-function M.issue_url(prompt_bufnr)
-	local issue = action_state.get_selected_entry(prompt_bufnr).value;
+function M.issue_url(_)
+	local issue = action_state.get_selected_entry().value;
 	local url = string.format("%s/browse/%s", config.host(), issue.issue_key);
 	return url
 end
 
 function M.copy_issue_url(prompt_bufnr)
 	local url = M.issue_url(prompt_bufnr)
-	vim.notify("URL copied to clipboard", 1, { title = "Octo.nvim" })
-	vim.fn.setreg("+", url, "c")
+	vim.notify("URL copied to clipboard", 1, { title = "Jira.nvim" })
+	vim.fn.setreg("+", url)
 end
 
 function M.open_in_browser(prompt_bufnr)
@@ -40,7 +40,7 @@ end
 
 function M.issue_transitions(picker)
 	return function(prompt_bufnr)
-		local issue = action_state.get_selected_entry(prompt_bufnr).value;
+		local issue = action_state.get_selected_entry().value;
 
 		-- TODO: Should we hide it and then show again, to avoid redundant requests?
 		actions.close(prompt_bufnr)
@@ -48,8 +48,8 @@ function M.issue_transitions(picker)
 	end
 end
 
-function M.do_transition(prompt_bufnr, _)
-	local selected = action_state.get_selected_entry(prompt_bufnr).value;
+function M.do_transition(_, _)
+	local selected = action_state.get_selected_entry().value;
 	local issue_key = selected.issue_key
 	local transition_id = selected.transition.transition_id
 
